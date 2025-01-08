@@ -30,7 +30,6 @@ public class ReviewController {
     @PostMapping("/create")
     public ResponseEntity<String> createReview(@Valid @RequestBody Review review) {
 
-        // Validate restaurantId using RestTemplate
         ResponseEntity<String> restaurantResponse = restTemplate.getForEntity(
                 "http://localhost:8081/api/restaurant/" + review.getRestaurantId(), String.class);
 
@@ -39,7 +38,6 @@ public class ReviewController {
                     .body("Invalid restaurantId: " + review.getRestaurantId());
         }
 
-        // Validate userId using RestTemplate
         ResponseEntity<String> userResponse = restTemplate.getForEntity(
                 "http://localhost:8080/api/customer/" + review.getUserId(), String.class);
 
@@ -48,13 +46,11 @@ public class ReviewController {
                     .body("Invalid userId: " + review.getUserId());
         }
 
-        // Save the review in the database
         Review savedReview = reviewRepository.save(review);
 
-        // Publish a message to RabbitMQ using RabbitTemplate
         rabbitTemplate.convertAndSend(
-                AppConfigRabbit.EXCHANGE_NAME, // Exchange name
-                "review.created", // Routing key
+                AppConfigRabbit.EXCHANGE_NAME,
+                "review.created",
                 "New review created for restaurant ID: " + review.getRestaurantId()
         );
 
